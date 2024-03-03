@@ -13,6 +13,9 @@
 
 struct arg {
 	const char *(*func)(const char *);
+	const char *icon_color;
+	const char *icon;
+	const char *fmt_color;
 	const char *fmt;
 	const char *args;
 };
@@ -41,6 +44,7 @@ difftimespec(struct timespec *res, struct timespec *a, struct timespec *b)
 static void
 usage(void)
 {
+	// die:退出当前脚本，是exit()函数别名
 	die("usage: %s [-v] [-s] [-1]", argv0);
 }
 
@@ -48,11 +52,13 @@ int
 main(int argc, char *argv[])
 {
 	struct sigaction act;
+	// 信号，start:开始，current:当前，diff:
 	struct timespec start, current, diff, intspec, wait;
 	size_t i, len;
 	int sflag, ret;
 	char status[MAXLEN];
 	const char *res;
+	char path[100];
 
 	sflag = 0;
 	ARGBEGIN {
@@ -89,9 +95,13 @@ main(int argc, char *argv[])
 		for (i = len = 0; i < LEN(args); i++) {
 			if (!(res = args[i].func(args[i].args)))
 				res = unknown_str;
-
-			if ((ret = esnprintf(status + len, sizeof(status) - len,
-			                     args[i].fmt, res)) < 0)
+			path[0] = '\0';
+			strcat(path, args[i].icon_color);
+			strcat(path, args[i].icon);
+			strcat(path, args[i].fmt_color);
+			strcat(path, args[i].fmt);
+			ret = esnprintf(status + len, sizeof(status) - len, path, res);
+			if (ret < 0)
 				break;
 
 			len += ret;
